@@ -13,7 +13,7 @@ import { getSwapTransaction } from '../../api/clone-api';
 import { Connection } from '@solana/web3.js';
 
 export const CLONE_LOGO =
-  'https://pbs.twimg.com/media/GOSLcp-XUAAH7JE?format=jpg&name=medium';
+  'https://github.com/Clone-Protocol/actions/blob/40ba47ea2fb9070cb865b0a2aed1fffd255e5216/images/clone.png?raw=true';
 
 const SWAP_AMOUNT_USD_OPTIONS = [10, 100, 1000];
 const DEFAULT_SWAP_AMOUNT_USD = 10;
