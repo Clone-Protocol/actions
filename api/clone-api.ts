@@ -1,10 +1,4 @@
-import {
-  Connection,
-  PublicKey,
-  Transaction,
-  SystemProgram,
-  Keypair,
-} from '@solana/web3.js';
+import { Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import {
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountIdempotentInstruction,
@@ -18,6 +12,7 @@ import {
   SwapInstructionArgs,
 } from 'clone-protocol-sdk/sdk/generated/clone';
 import { BN } from 'bn.js';
+import { prepareTransactionWithConnection } from '../shared/transaction-utils';
 
 const CLONE_PROGRAM_ID = new PublicKey(
   'C1onEW2kPetmHmwe74YC1ESx3LnFEpVau6g2pg4fHycr',
@@ -40,13 +35,12 @@ export const getSwapTransaction = async (
   account: string,
   poolIndex: number,
   amount: string,
-): Promise<Transaction> => {
+): Promise<VersionedTransaction> => {
   const [clone, oracles, pools] = await Promise.all([
     Clone.fromAccountAddress(connection, CLONE_ACCOUNT_ADDRESS),
     Oracles.fromAccountAddress(connection, ORACLES_ADDRESS),
     Pools.fromAccountAddress(connection, POOLS_ADDRESS),
   ]);
-
   const pool = pools.pools[poolIndex];
   const oracle = oracles.oracles[pool.assetInfo.oracleInfoIndex];
   const collateralOracle = oracles.oracles[clone.collateral.oracleInfoIndex];
@@ -73,7 +67,7 @@ export const getSwapTransaction = async (
     true,
   );
 
-  let transaction = new Transaction().add(
+  let instructions = [
     createAssociatedTokenAccountIdempotentInstruction(
       user,
       userClassetTokenAccount,
@@ -107,15 +101,16 @@ export const getSwapTransaction = async (
         quantity: new BN(amount).mul(new BN('1000000')), // Convert to USDC decimals
         quantityIsCollateral: true,
         quantityIsInput: true,
-        resultThreshold: 0, // TODO.
+        resultThreshold: 0,
       } as SwapInstructionArgs,
     ),
-  );
+  ];
 
-  transaction.recentBlockhash = (
-    await connection.getLatestBlockhash('confirmed')
-  ).blockhash;
-  transaction.feePayer = user;
+  const transaction = await prepareTransactionWithConnection(
+    connection,
+    instructions,
+    user,
+  );
 
   return transaction;
 };

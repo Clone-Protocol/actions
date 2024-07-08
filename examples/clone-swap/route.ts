@@ -5,7 +5,6 @@ import {
   actionsSpecOpenApiPostResponse,
 } from '../openapi';
 import {
-  ActionError,
   ActionGetResponse,
   ActionPostRequest,
   ActionPostResponse,
@@ -14,7 +13,7 @@ import { getSwapTransaction } from '../../api/clone-api';
 import { Connection } from '@solana/web3.js';
 
 export const CLONE_LOGO =
-  'https://pbs.twimg.com/media/GOSLcp-XUAAH7JE?format=jpg&name=medium';//'https://ucarecdn.com/09c80208-f27c-45dd-b716-75e1e55832c4/-/preview/1000x981/-/quality/smart/-/format/auto/';
+  'https://pbs.twimg.com/media/GOSLcp-XUAAH7JE?format=jpg&name=medium';
 
 const SWAP_AMOUNT_USD_OPTIONS = [10, 100, 1000];
 const DEFAULT_SWAP_AMOUNT_USD = 10;
@@ -27,14 +26,14 @@ const US_DOLLAR_FORMATTING = new Intl.NumberFormat('en-US', {
 const app = new OpenAPIHono();
 
 const poolTickers = [
-    "clARB-USDC",
-    "clOP-USDC",
-    "clSUI-USDC",
-    "clDOGE-USDC",
-    "clBNB-USDC",
-    "clAPT-USDC",
-    "cl1MPEPE-USDC",
-]
+  'clARB-USDC',
+  'clOP-USDC',
+  'clSUI-USDC',
+  'clDOGE-USDC',
+  'clBNB-USDC',
+  'clAPT-USDC',
+  'cl1MPEPE-USDC',
+];
 
 app.openapi(
   createRoute({
@@ -57,7 +56,9 @@ app.openapi(
   }),
   async (c) => {
     const tokenPair = c.req.param('tokenPair');
-    const poolIndex = poolTickers.map(x => x.toLowerCase()).indexOf(tokenPair.toLowerCase());
+    const poolIndex = poolTickers
+      .map((x) => x.toLowerCase())
+      .indexOf(tokenPair.toLowerCase());
 
     if (poolIndex === -1) {
       return Response.json({
@@ -71,7 +72,6 @@ app.openapi(
         },
       } satisfies ActionGetResponse);
     }
-
     const [outputToken, inputToken] = poolTickers[poolIndex].split('-');
     const amountParameterName = 'amount';
 
@@ -84,7 +84,7 @@ app.openapi(
         actions: [
           ...SWAP_AMOUNT_USD_OPTIONS.map((amount) => ({
             label: `${US_DOLLAR_FORMATTING.format(amount)}`,
-            href: `/api/clone/swap/${inputToken}/${amount}`,
+            href: `/api/clone/swap/${tokenPair}/${amount}`,
           })),
           {
             href: `/api/clone/swap/${tokenPair}/{${amountParameterName}}`,
@@ -137,7 +137,9 @@ app.openapi(
   }),
   async (c) => {
     const tokenPair = c.req.param('tokenPair');
-    const poolIndex = poolTickers.map(x => x.toLowerCase()).indexOf(tokenPair.toLowerCase());
+    const poolIndex = poolTickers
+      .map((x) => x.toLowerCase())
+      .indexOf(tokenPair.toLowerCase());
 
     if (poolIndex === -1) {
       return Response.json({
@@ -151,7 +153,6 @@ app.openapi(
         },
       } satisfies ActionGetResponse);
     }
-
     const [outputToken, inputToken] = poolTickers[poolIndex].split('-');
     const response: ActionGetResponse = {
       icon: CLONE_LOGO,
@@ -200,7 +201,9 @@ app.openapi(
     const amount = c.req.param('amount') ?? DEFAULT_SWAP_AMOUNT_USD.toString();
     const { account } = (await c.req.json()) as ActionPostRequest;
     const tokenPair = c.req.param('tokenPair');
-    const poolIndex = poolTickers.map(x => x.toLowerCase()).indexOf(tokenPair.toLowerCase());
+    const poolIndex = poolTickers
+      .map((x) => x.toLowerCase())
+      .indexOf(tokenPair.toLowerCase());
     if (poolIndex === -1) {
       return Response.json({
         icon: CLONE_LOGO,
@@ -213,27 +216,31 @@ app.openapi(
         },
       } satisfies ActionGetResponse);
     }
-
-    const url = process.env.RPC_URL ?? "https://api.mainnet-beta.solana.com";
+    const url = process.env.RPC_URL ?? 'https://api.mainnet-beta.solana.com';
     const connection = new Connection(url);
 
     try {
-        const transaction = await getSwapTransaction(connection, account, poolIndex, amount)
-        let response: ActionPostResponse = {
-            transaction: transaction.compileMessage().serialize().toString('base64'),
-          };
-        return c.json(response);
+      const transaction = await getSwapTransaction(
+        connection,
+        account,
+        poolIndex,
+        amount,
+      );
+      let response: ActionPostResponse = {
+        transaction: Buffer.from(transaction.serialize()).toString('base64'),
+      };
+      return c.json(response);
     } catch (error) {
-        return Response.json({
-            icon: CLONE_LOGO,
-            label: 'Unable to create transaction',
-            title: `Buy Cloned Assets`,
-            description: `Buy Cloned Assets.`,
-            disabled: true,
-            error: {
-              message: JSON.stringify(error),
-            },
-        } satisfies ActionGetResponse );
+      return Response.json({
+        icon: CLONE_LOGO,
+        label: 'Unable to create transaction',
+        title: `Buy Cloned Assets`,
+        description: `Buy Cloned Assets.`,
+        disabled: true,
+        error: {
+          message: JSON.stringify(error),
+        },
+      } satisfies ActionGetResponse);
     }
   },
 );
