@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server';
 import jupiterSwap from './jupiter-swap/route';
 import cloneSwap from './clone-swap/route';
+import cloneLiquidity from './clone-liquidity/route';
 import { cors } from 'hono/cors';
 import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono } from '@hono/zod-openapi';
@@ -11,6 +12,7 @@ app.use('/*', cors());
 // <--Actions-->
 app.route('/api/jupiter/swap', jupiterSwap);
 app.route('/api/clone/swap', cloneSwap);
+app.route('/api/clone/liquidity', cloneLiquidity);
 
 // </--Actions-->
 app.doc('/doc', {
